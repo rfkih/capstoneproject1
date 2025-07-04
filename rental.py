@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, date
 
 cars = []
 car_id = 0
@@ -35,6 +35,13 @@ def show_menu(role):
         print("3. Rent a Car")
         print("4. Exit")
 
+def input_price(text):
+    while True:
+        try:
+            return int(input(text))
+        except ValueError:
+            print("Invalid Price. Please enter a number.") 
+
 def create_car():
     global car_id
     print("\n--- Add New Car ---")
@@ -42,6 +49,7 @@ def create_car():
     brand = input("Enter Car Brand: ")
     model = input("Enter Car Model: ")
     year = input("Enter Manufacture Year: ")
+    rate = input_price("Enter Car Rate : ")
     car_id += 1
 
     car = {
@@ -49,11 +57,12 @@ def create_car():
         "brand": brand,
         "model": model,
         "year": year,
+        "rate" : rate,
         "rented_dates": []  # Format ["YYYY-MM-DD"]
     }
 
     cars.append(car)
-    print(f"✅ Car added with ID: {car_id}")
+    print(f"Car added with ID: {car_id}")
 
 def read_cars():
     print("\n--- List of Cars ---")
@@ -63,13 +72,12 @@ def read_cars():
 
     for car in cars:
         rented = ", ".join(car["rented_dates"]) or "None"
-        print(f"ID: {car['id']}, Brand: {car['brand']}, Model: {car['model']}, Year: {car['year']}, Rented Dates: {rented}")
+        print(f"ID: {car['id']}, Brand: {car['brand']}, Model: {car['model']}, Year: {car['year']}, Rate: Rp.{car['rate']}, Rented Dates: {rented}")
 
 def update_car():
-    read_cars("admin")
+    read_cars()
     if not cars:
         return
-
     try:
         car_id_input = int(input("Enter Car ID to update: ").strip())
     except ValueError:
@@ -83,7 +91,8 @@ def update_car():
         brand = input(f"New Brand (current: {car['brand']}): ") or car['brand']
         model = input(f"New Model (current: {car['model']}): ") or car['model']
         year = input(f"New Year (current: {car['year']}): ") or car['year']
-        car.update({"brand": brand, "model": model, "year": year})
+        rate = input_price(f"New Rate (current: {car['rate']}): ") or car['rate']
+        car.update({"brand": brand, "model": model, "year": year, "rate" : rate})
         print("Car updated.")
     else:
         print(" Car ID not found.")
@@ -102,41 +111,95 @@ def delete_car():
     for i, car in enumerate(cars):
         if car["id"] == car_id_input:
             deleted = cars.pop(i)
-            print(f"✅ Car '{deleted['model']}' deleted.")
+            print(f"Car '{deleted['model']}' deleted.")
             return
     print(" Car ID not found.")
 
 def rent_car():
     read_cars()
-    if not cars:
-        return
-
-    try:
-        car_id_input = int(input("Enter Car ID to rent: ").strip())
-    except ValueError:
-        print("Invalid ID. Please enter a number.")
-        return
-
-    car = next((c for c in cars if c["id"] == car_id_input), None)
-
-    if car:
-        date_str = input("Enter rental date (YYYY-MM-DD): ").strip()
-        if not is_valid_date(date_str):
-            print("Invalid date format.")
-            return
-        if date_str in car["rented_dates"]:
-            print("Car is already rented on that date.")
-        else:
-            car["rented_dates"].append(date_str)
-            print(f"Car rented for {date_str}.")
-    else:
+    cid = _input_int("Enter Car ID to rent: ")
+    car = _find_car(cid)
+    if not car:
         print("Car ID not found.")
+        return
+    start, end = _get_rental_period()
+    if not _validate_period(start, end):
+        return
+    requested = _generate_dates(start, end)
+    if _is_conflict(car, requested):
+        return
+    cost = _calculate_cost(car['rate'], start, end)
+    if not _process_payment(cost):
+        return
+    car['rented_dates'].extend(requested)
+    print(f"Car booked for {(end-start).days+1} day(s) from {start} to {end}.")
+
+def _input_int(prompt):
+    while True:
+        try:
+            return int(input(prompt).strip())
+        except ValueError:
+            print("Invalid input. Must be a number.")
+
+
+def _find_car(cid):
+    return next((c for c in cars if c['id'] == cid), None)
+
+def _get_rental_period():
+    start_str = input("Enter start date (YYYY-MM-DD): ").strip()
+    end_str = input("Enter end date (YYYY-MM-DD): ").strip()
+    return datetime.strptime(start_str, "%Y-%m-%d").date(), datetime.strptime(end_str, "%Y-%m-%d").date()
+
+def _validate_period(start, end):
+    today = date.today()
+    if start < today:
+        print("Start date cannot be before today.")
+        return False
+    if end < start:
+        print("End date must be after start date.")
+        return False
+    return True
+
+def _generate_dates(start, end):
+    days = (end - start).days + 1
+    return [(start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(days)]
+
+def _is_conflict(car, dates):
+    for d in dates:
+        if d in car['rented_dates']:
+            print(f"Car already rented on {d}.")
+            return True
+    return False
+
+def _calculate_cost(rate, start, end):
+    days = (end - start).days + 1
+    total = rate * days
+    print(f"Total cost: {total} for {days} day(s)")
+    return total
+
+def _process_payment(amount):
+    confirm = input("Proceed to payment? (yes/no): ").strip().lower()
+    if confirm != 'yes':
+        print("Booking cancelled.")
+        return False
+    payment = input_price("Enter payment amount: ")
+    
+    while True:
+        if payment >= amount:
+            print(f"Payment successful. Change: {payment-amount}")
+            return True
+        print(f"Insufficient payment.  {amount-payment} more.")
+        
+        
 
 def check_availability():
     date_str = input("Enter date to check (YYYY-MM-DD): ")
     if not is_valid_date(date_str):
         print("Invalid date format.")
         return
+    today = date.today()
+    if date_str < today:
+        print("Cannot input past date.")
     print(f"\nAvailable cars on {date_str}:")
     found = False
     for car in cars:
@@ -166,7 +229,7 @@ def main():
     role = login()
     while True:
         show_menu(role)
-        print("0. Change Role")  # ⬅️ new option in the menu
+        print("0. Change Role")  
         choice = input("Select an option: ").strip()
 
         if choice == "0":
@@ -203,5 +266,4 @@ def main():
                 break
             else:
                 print("Invalid choice.")
-
 main()
