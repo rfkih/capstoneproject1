@@ -1,0 +1,26 @@
+{
+    "cars": [
+        {
+            "id": 2,
+            "brand": "ferrari",
+            "model": "458",
+            "year": "2020",
+            "rented_dates": []
+        },
+        {
+            "id": 3,
+            "brand": "toyota",
+            "model": "hilux",
+            "year": "2020",
+            "rented_dates": []
+        },
+        {
+            "id": 4,
+            "brand": "porsche",
+            "model": "cayman",
+            "year": "2020",
+            "rented_dates": []
+        }
+    ],
+    "car_id": 4
+}
