@@ -42,6 +42,16 @@ def input_price(text):
         except ValueError:
             print("Invalid Price. Please enter a number.") 
 
+def input_price_update(text):
+    while True:
+        s = input(text).strip()
+        if s == "":
+            return None
+        try:
+            return int(s)
+        except ValueError:
+            print("Invalid Price. Please enter a number.")
+
 def create_car():
     global car_id
     print("\n--- Add New Car ---")
@@ -91,8 +101,8 @@ def update_car():
         brand = input(f"New Brand (current: {car['brand']}): ") or car['brand']
         model = input(f"New Model (current: {car['model']}): ") or car['model']
         year = input(f"New Year (current: {car['year']}): ") or car['year']
-        rate = input_price(f"New Rate (current: {car['rate']}): ") or car['rate']
-        car.update({"brand": brand, "model": model, "year": year, "rate" : rate})
+        rate = input_price_update(f"New Rate (current: {car['rate']}): ") or car['rate']
+        car.update({"brand": brand, "model": model, "year": year, "rate" : rate}) 
         print("Car updated.")
     else:
         print(" Car ID not found.")
