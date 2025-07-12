@@ -14,7 +14,9 @@
             "model": "NSX",
             "year": "2021",
             "rate": 30000,
-            "rented_dates": []
+            "rented_dates": [
+                "2025-07-13"
+            ]
         },
         {
             "id": 7,

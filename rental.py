@@ -207,9 +207,14 @@ def check_availability():
     if not is_valid_date(date_str):
         print("Invalid date format.")
         return
+        
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+
     today = date.today()
-    if date_str < today:
+    if date_obj < today:
         print("Cannot input past date.")
+        return
+    
     print(f"\nAvailable cars on {date_str}:")
     found = False
     for car in cars:
@@ -246,12 +251,13 @@ def main():
             role = login()
             continue
 
+        if choice == "1":
+            read_cars()
+        elif choice == "2":
+            check_availability()
+
         if role == "admin":
-            if choice == "1":
-                read_cars()
-            elif choice == "2":
-                check_availability()
-            elif choice == "3":
+            if choice == "3":
                 create_car()
             elif choice == "4":
                 update_car()
@@ -264,11 +270,7 @@ def main():
             else:
                 print("Invalid choice.")
         else:  
-            if choice == "1":
-                read_cars()
-            elif choice == "2":
-                check_availability()
-            elif choice == "3":
+            if choice == "3":
                 rent_car()
             elif choice == "4":
                 save_data()
