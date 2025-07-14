@@ -192,9 +192,10 @@ def _process_payment(amount):
     if confirm != 'yes':
         print("Booking cancelled.")
         return False
-    payment = input_price("Enter payment amount: ")
     
     while True:
+        payment = input_price("Enter payment amount: ")
+
         if payment >= amount:
             print(f"Payment successful. Change: {payment-amount}")
             return True
